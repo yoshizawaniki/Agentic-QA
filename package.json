@@ -1,0 +1,26 @@
+{
+  "name": "agentic-qa",
+  "version": "0.1.0",
+  "description": "Repository-agnostic, model-swappable autonomous QA orchestration platform: AI finds issues, deterministic evidence decides.",
+  "type": "module",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "bin": {
+    "agentic-qa": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"tests/*.test.ts\"",
+    "eval": "node src/eval/evaluate.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "opencode-ai": "^1.18.21",
+    "typescript": "^5.9.2"
+  },
+  "allowScripts": {
+    "opencode-ai@1.18.21": true
+  },
+  "license": "MIT"
+}

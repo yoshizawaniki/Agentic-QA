@@ -1,0 +1,28 @@
+{
+    "fixture":  "fixture-e",
+    "description":  "Implementation sorts ascending; documented spec requires score DESC with createdAt tie-break. Tests only check membership.",
+    "expected":  [
+                     {
+                         "category":  "spec-mismatch",
+                         "file":  "src/ranking.js"
+                     },
+                     {
+                         "category":  "spec-mismatch",
+                         "deterministic":  true
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other",
+                              "data-integrity"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "membership"
+                              },
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "immutability"
+                              }
+                          ]
+}

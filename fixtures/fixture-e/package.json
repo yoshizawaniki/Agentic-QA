@@ -1,0 +1,9 @@
+{
+  "name": "fixture-e-ranking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture E: implementation contradicts the documented ranking contract",
+  "scripts": {
+    "test": "node --test"
+  }
+}

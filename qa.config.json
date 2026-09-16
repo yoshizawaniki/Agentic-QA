@@ -1,0 +1,15 @@
+{
+  "target": { "name": "agentic-qa" },
+  "rules": ["AGENTS.md", "README.md", "docs"],
+  "gates": {
+    "typecheck": { "cmd": "npm run typecheck", "timeout_sec": 180 },
+    "test": { "cmd": "npm test", "timeout_sec": 300 }
+  },
+  "secrets_env": [],
+  "mutation": {
+    "enabled": true,
+    "max_mutants": 8,
+    "include": ["src/**"]
+  },
+  "ai": { "concurrency": 1 }
+}

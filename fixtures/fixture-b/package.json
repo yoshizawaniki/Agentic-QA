@@ -1,0 +1,9 @@
+﻿{
+  "name": "fixture-b-wrong-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture B: test suite agrees with the buggy implementation instead of the documented spec; weak boundary tests elsewhere",
+  "scripts": {
+    "test": "node --test"
+  }
+}

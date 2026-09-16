@@ -1,0 +1,7 @@
+{
+  "rules": ["README.md"],
+  "gates": {
+    "test": { "cmd": "npm test", "timeout_sec": 120 }
+  },
+  "mutation": { "enabled": true, "max_mutants": 6, "include": ["src/threshold.js"] }
+}

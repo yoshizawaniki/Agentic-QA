@@ -1,0 +1,9 @@
+﻿{
+  "name": "fixture-h-fake-readme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture H: README claims tests pass while the suite actually fails",
+  "scripts": {
+    "test": "node --test"
+  }
+}

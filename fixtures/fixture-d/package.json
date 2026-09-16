@@ -1,0 +1,9 @@
+﻿{
+  "name": "fixture-d-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture D: partial-state transfer and duplicate idempotency bugs",
+  "scripts": {
+    "test": "node --test"
+  }
+}

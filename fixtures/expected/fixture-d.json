@@ -1,0 +1,27 @@
+{
+    "fixture":  "fixture-d",
+    "description":  "Debit happens before validation (partial state on failure) and failed attempts consume the transferId (poisoned retry).",
+    "expected":  [
+                     {
+                         "category":  "data-integrity",
+                         "file":  "src/store.js"
+                     },
+                     {
+                         "category":  "data-integrity",
+                         "deterministic":  true
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "happy-path"
+                              },
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "invariant"
+                              }
+                          ]
+}

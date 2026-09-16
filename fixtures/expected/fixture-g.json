@@ -1,0 +1,27 @@
+{
+    "fixture":  "fixture-g",
+    "description":  "formatDate ignores its offset parameter; naive fixes that duplicate parsing logic risk breaking formatDateTime (regression trap).",
+    "expected":  [
+                     {
+                         "category":  "logic",
+                         "file":  "src/format.js"
+                     },
+                     {
+                         "category":  "logic",
+                         "deterministic":  true
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "offsetminutes"
+                              },
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "false-green"
+                              }
+                          ]
+}

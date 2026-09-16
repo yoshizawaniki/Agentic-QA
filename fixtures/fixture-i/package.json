@@ -1,0 +1,1 @@
+{"name":"fixture-i-falsefix","version":"1.0.0","private":true,"description":"QA fixture I: false-verification trap — naive fix for bug A silently breaks spec clause C","scripts":{"test":"node --test"}}

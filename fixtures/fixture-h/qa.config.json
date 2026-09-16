@@ -1,0 +1,6 @@
+{
+  "gates": {
+    "test": { "cmd": "npm test", "timeout_sec": 120 }
+  },
+  "mutation": { "enabled": false }
+}

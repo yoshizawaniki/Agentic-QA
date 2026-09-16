@@ -1,0 +1,10 @@
+{
+  "rules": ["README.md", "SPEC.md"],
+  "gates": {
+    "test": { "cmd": "npm test", "timeout_sec": 120 }
+  },
+  "invariants": [
+    { "name": "clamp-spec-properties", "cmd": "node scripts/invariants.js" }
+  ],
+  "mutation": { "enabled": false, "max_mutants": 4 }
+}

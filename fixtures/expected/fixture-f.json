@@ -1,0 +1,27 @@
+{
+    "fixture":  "fixture-f",
+    "description":  "February hardcoded to 29 (leap boundary ignored); tested months 3/4/12 all pass.",
+    "expected":  [
+                     {
+                         "category":  "boundary",
+                         "file":  "src/days.js"
+                     },
+                     {
+                         "category":  "boundary",
+                         "deterministic":  true
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "months"
+                              },
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "wired"
+                              }
+                          ]
+}

@@ -1,0 +1,28 @@
+{
+    "fixture":  "fixture-c",
+    "description":  "Async read-modify-write loses updates under concurrency; tests only exercise sequential calls.",
+    "expected":  [
+                     {
+                         "category":  "race",
+                         "file":  "src/counter.js"
+                     },
+                     {
+                         "category":  "race",
+                         "deterministic":  true
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other",
+                              "data-integrity"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "concurrency"
+                              },
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "repro"
+                              }
+                          ]
+}

@@ -1,0 +1,9 @@
+﻿{
+  "name": "fixture-g-format",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture G: date formatting bug with a regression trap for naive fixes",
+  "scripts": {
+    "test": "node --test"
+  }
+}

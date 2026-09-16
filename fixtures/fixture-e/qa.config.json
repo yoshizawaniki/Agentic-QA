@@ -1,0 +1,10 @@
+{
+  "rules": ["SPEC.md", "README.md"],
+  "gates": {
+    "test": { "cmd": "npm test", "timeout_sec": 120 }
+  },
+  "invariants": [
+    { "name": "ranking-spec-order", "cmd": "node scripts/invariant-order.js", "category": "spec-mismatch" }
+  ],
+  "mutation": { "enabled": false }
+}

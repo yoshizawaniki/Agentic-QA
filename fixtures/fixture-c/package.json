@@ -1,0 +1,9 @@
+﻿{
+  "name": "fixture-c-race",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture C: lost-update race in async increment",
+  "scripts": {
+    "test": "node --test"
+  }
+}

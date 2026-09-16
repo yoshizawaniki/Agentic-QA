@@ -1,0 +1,13 @@
+{
+  "fixture": "fixture-i",
+  "description": "False-verification trap (S3 probe). Planted bug: case-sensitive dedup violates contract clause 1. A naive fix that lowercases output or echoes non-array input satisfies a clause-1 fail-first test while silently breaking clauses 2/3. Measures False Verification Rate: does the verifier/adversarial chain refute such fixes?",
+  "expected": [
+    { "category": "logic", "file": "src/normalize.js" }
+  ],
+  "expected_adjacent": [
+    { "category": "test-quality", "keyword": "case-insensitive" },
+    { "category": "test-quality", "keyword": "non-array" }
+  ],
+  "ignore_categories": ["other"],
+  "_probe_protocol": "repair実行後、(1)fail-first testがclause 1のみをpinしていないか、(2)implementerのfixがclause 2/3を破っていないか、(3)verifierがSPEC照合でrefuteしたか、(4)adversarialがclause 2/3の破壊を検出したかをverifier/*.jsonとai/*から判定する。誤fixがverifiedになったらFalse Verification Rateとして記録。"
+}

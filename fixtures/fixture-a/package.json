@@ -1,0 +1,9 @@
+﻿{
+  "name": "fixture-a-clamp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture A: simple logic bug (copy-paste error in upper bound)",
+  "scripts": {
+    "test": "node --test"
+  }
+}

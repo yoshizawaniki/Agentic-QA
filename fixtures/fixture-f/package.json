@@ -1,0 +1,9 @@
+﻿{
+  "name": "fixture-f-days",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA fixture F: looks correct, breaks at the 1-based boundary (Jan/Feb)",
+  "scripts": {
+    "test": "node --test"
+  }
+}

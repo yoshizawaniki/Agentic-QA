@@ -1,0 +1,35 @@
+{
+    "fixture":  "fixture-h",
+    "description":  "README asserts all tests pass while the suite genuinely fails; documentation must be checked against executed evidence.",
+    "expected":  [
+                     {
+                         "category":  "gate-failure",
+                         "deterministic":  true
+                     },
+                     {
+                         "category":  "doc-integrity",
+                         "deterministic":  true
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "division-by-zero"
+                              },
+                              {
+                                  "category":  "spec-mismatch",
+                                  "keyword":  "incorrect expected"
+                              },
+                              {
+                                  "category":  "spec-mismatch",
+                                  "keyword":  "falsely claims"
+                              },
+                              {
+                                  "category":  "boundary",
+                                  "keyword":  "error paths"
+                              }
+                          ]
+}

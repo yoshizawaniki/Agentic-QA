@@ -1,0 +1,27 @@
+{
+    "fixture":  "fixture-a",
+    "description":  "Copy-paste logic bug: upper-bound branch returns min instead of max. Existing tests miss it; declared invariant catches it deterministically.",
+    "expected":  [
+                     {
+                         "category":  "data-integrity",
+                         "deterministic":  true
+                     },
+                     {
+                         "category":  "logic",
+                         "file":  "src/clamp.js"
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "clamping"
+                              },
+                              {
+                                  "category":  "spec-mismatch",
+                                  "keyword":  "invariant"
+                              }
+                          ]
+}

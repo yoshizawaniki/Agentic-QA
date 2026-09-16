@@ -1,0 +1,9 @@
+{
+  "gates": {
+    "test": { "cmd": "npm test", "timeout_sec": 120 }
+  },
+  "invariants": [
+    { "name": "parallel-increments-count-exactly-once", "cmd": "node scripts/repro-race.js", "category": "race" }
+  ],
+  "mutation": { "enabled": false }
+}

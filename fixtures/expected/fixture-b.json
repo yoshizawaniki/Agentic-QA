@@ -1,0 +1,31 @@
+{
+    "fixture":  "fixture-b",
+    "description":  "Test suite encodes the buggy fraction semantics instead of the documented percent contract; boundary tests for free-shipping threshold are too weak (mutation survives).",
+    "expected":  [
+                     {
+                         "category":  "spec-mismatch",
+                         "file":  "src/discount.js"
+                     },
+                     {
+                         "category":  "test-quality",
+                         "file":  "test/discount.test.js"
+                     },
+                     {
+                         "category":  "test-quality",
+                         "file":  "src/threshold.js"
+                     }
+                 ],
+    "ignore_categories":  [
+                              "other"
+                          ],
+    "expected_adjacent":  [
+                              {
+                                  "category":  "test-quality",
+                                  "keyword":  "threshold"
+                              },
+                              {
+                                  "category":  "boundary",
+                                  "keyword":  "shipping"
+                              }
+                          ]
+}

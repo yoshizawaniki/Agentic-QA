@@ -1,0 +1,9 @@
+{
+  "gates": {
+    "test": { "cmd": "npm test", "timeout_sec": 120 }
+  },
+  "invariants": [
+    { "name": "transfer-atomicity-and-idempotency", "cmd": "node scripts/invariant-transfer.js", "category": "data-integrity" }
+  ],
+  "mutation": { "enabled": false }
+}
