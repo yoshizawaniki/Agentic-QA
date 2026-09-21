@@ -1,6 +1,6 @@
-# Agentic-QA 0.2.0 - draft release notes
+# Agentic-QA 0.2.0
 
-Status: **draft only; not released**
+Release date: **2026-09-21**
 
 This candidate focuses on making the project installable, independently verifiable, and easier for outside contributors to inspect.
 

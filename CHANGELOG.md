@@ -2,7 +2,7 @@
 
 Notable user-visible changes are recorded here. Agentic-QA intends to follow Semantic Versioning for release tags.
 
-## 0.2.0 - Unreleased release candidate
+## 0.2.0 - 2026-09-21
 
 ### Added
 
