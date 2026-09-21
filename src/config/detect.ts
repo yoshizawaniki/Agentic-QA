@@ -27,7 +27,7 @@ export interface TargetConfig {
   };
   invariants: InvariantConfig[];
   forbidden_paths: string[];
-  sandbox: { exclude_globs: string[] };
+  sandbox: { exclude_globs: string[]; node_modules_mode: "junction" | "copy" };
   environment: Record<string, string>;
   secrets_env: string[];
   ai: {
@@ -67,7 +67,7 @@ export function defaultConfig(targetRoot: string): TargetConfig {
     gates: {},
     invariants: [],
     forbidden_paths: [],
-    sandbox: { exclude_globs: DEFAULT_EXCLUDES },
+    sandbox: { exclude_globs: DEFAULT_EXCLUDES, node_modules_mode: "junction" },
     environment: {},
     secrets_env: [],
     ai: {

@@ -1,98 +1,158 @@
 # Agentic-QA
 
-**An autonomous QA orchestration platform that independently verifies AI-generated code.** Repository-agnostic, model-swappable.
+**Evidence-first QA orchestration for code changed by AI or humans.**
 
-Core principle: **AI consensus is not correctness**. A finding or fix becomes `verified` only with deterministic evidence (execution results, tests, diffs, static checks).
+Agentic-QA exists for a specific failure mode: an agent can produce a plausible finding, another agent can agree, and both can still be wrong. Its core rule is therefore:
 
-## What it does
+> **AI consensus is not correctness.**
 
-```text
-Understand project -> baseline -> Layer 1: deterministic gates (build/typecheck/test/invariant/mutation)
--> Layer 2: independent AI review (spec/explorer/test-adversarial/security/perf)
--> dedup/prioritize -> (repair) fail-first test -> sandboxed fix -> independent verifier -> adversarial retest
--> judge -> evidence-backed report
-```
+AI findings are hypotheses. Agentic-QA combines deterministic gates, explicit invariants, mutation testing, isolated repair, independent verification, and adversarial retesting so that claims are backed by inspectable evidence.
 
-- The target project is executed and modified **only inside an isolated sandbox copy** (the original tree is read-only)
-- `fixed` and `verified` are separate states. Implementer self-claims are never accepted
-- Every command log is recorded under `runs/<run-id>/commands.jsonl` with secrets masked
+## What the four main commands mean
 
-## Requirements
+| Command | Purpose |
+|---|---|
+| audit target | Inspect a target through deterministic gates and optional independent AI review. The original tree is not written by the audit pipeline. |
+| repair target | Reproduce and fix selected findings inside an isolated run workspace, then independently verify the result. |
+| campaign target | Repeat evidence-based audit/repair rounds until a configured stop condition is reached. |
+| verify runId | Re-run verification against a saved run workspace and downgrade a previously verified state if regression evidence appears. |
 
-- Node.js >= 23.6 (TypeScript runs directly, no build step)
-- (Optional) OpenCode CLI for the AI layer. Works in deterministic mode with `--no-ai` even without it
+The AI layer is optional. audit and the deterministic fixture benchmark work with --no-ai and require no API key.
 
-## Quick start
+## What verified means
 
-```powershell
-npm install
-npm run typecheck
-npm test
+verified is deliberately narrower than “correct”.
 
-# Deterministic-only audit (no model needed)
-node src/cli.ts audit <path-to-target-project> --no-ai
+A repair reaches verified only when the available repair chain has the required evidence: post-fix deterministic gates pass, a fail-first test was observed failing before the fix, the independent verifier accepts the artifact, and the adversarial retest finds no new Critical/High issue.
 
-# Audit with AI review (OpenCode configured)
-node src/cli.ts audit <target> --model "openrouter/<model-id>:free"
+That still does **not** prove full program correctness. A specification edge case absent from tests/invariants can remain wrong. fixture-i exists specifically to measure this false-verification risk.
 
-# Fail-first test -> fix -> independent verification inside sandbox
-node src/cli.ts repair <target> --from-run <previous-run-id>
-```
+## Original-tree safety
+
+The target is copied into runs/run-id/workspace for execution and repair. Agentic-QA does not automatically apply repair patches back to the original target. A SHA-256 baseline is also compared before/after a run so outside changes to the original tree can be reported separately.
+
+Current fast isolation shares node_modules with the target when available. That avoids reinstall cost but is not a hardened filesystem sandbox; tests that write inside node_modules can affect the shared dependency tree. Use --strict-isolation (or sandbox.node_modules_mode=copy) to physically copy dependencies when that risk matters.
+
+## 30-60 second Quick Start
+
+The package has not been published to npm yet. From a clone:
+
+    npm install
+    npm run typecheck
+    npm test
+    node src/cli.ts audit ./fixtures/fixture-a --no-ai
+
+To test the exact artifact that an npm consumer would receive:
+
+    npm run package:smoke
+
+That command builds dist JavaScript, creates a real tarball, installs it in a clean temporary directory, runs the installed agentic-qa --help shim, and audits fixture-a from the installed CLI.
+
+Development remains convenient: supported Node versions execute the erasable TypeScript source directly. Distribution is different by design: npm packages point at dist/cli.js so Node is never asked to type-strip TypeScript from node_modules.
+
+## Optional AI layer
+
+OpenCode is used as the current AgentRunner implementation. Agentic-QA discovers it from AGENTIC_QA_OPENCODE_BIN, a project-local opencode-ai install, or PATH.
+
+Example:
+
+    node src/cli.ts audit ./path/to/project --model provider/model-id
+
+AI/provider failures are recorded as failures or skipped work; missing AI output is never converted into deterministic evidence.
+
+## Configuration
+
+Generate a starting configuration:
+
+    node src/cli.ts init-config ./path/to/project
+
+qa.config.json can declare build/typecheck/lint/test/integration gates, executable invariants, forbidden paths, secret environment variable names, AI role models, mutation settings, and limits. See docs/TARGET_ADAPTER.md and the repository qa.config.json example.
 
 ## Commands
 
 | Command | Description |
 |---|---|
-| `audit <target>` | Read-focused full audit. Original tree untouched |
-| `repair <target>` | Fix findings in isolated sandbox. Use `--from-run` to carry over audit findings |
-| `campaign <target>` | Multi-round autonomous verification. Evidence-based stop conditions |
-| `verify <runId>` | Re-run deterministic gates + independent verifier on a saved sandbox |
-| `init-config <target>` | Generate a `qa.config.json` template for the target |
-| `eval` | Fixture A-I benchmark (detection recall / false positives) |
+| audit target | Deterministic gates plus optional independent AI review |
+| repair target | Isolated fail-first/fix/verify flow; --from-run imports eligible findings |
+| campaign target | Multi-round evidence-based verification and repair |
+| verify runId | Re-run gates/verifier against a stored workspace |
+| init-config target | Write a qa.config.json template |
+| eval | Fixture A-I finding-recall / false-positive benchmark |
+| eval-fvr --no-ai | Deterministic fixture-i candidate/oracle probe |
+| eval-fvr --model id | Model-specific false-verification probe |
 
-Common options: `--no-ai` `--model` `--verifier-model` `--max-mutants` `--no-mutation` `--from-run` `--max-fixes` `--competing N` `--rounds` `--runs-dir`
+Common options include --no-ai, --model, --verifier-model, --review-timeout, --max-mutants, --no-mutation, --from-run, --max-fixes, --competing, --rounds, and --runs-dir.
 
-Exit codes: `0`=pass / `1`=gate failure or unresolved Critical/High / `2`=tool error
+Exit codes: 0 means the command-specific acceptance condition passed; 1 means a QA/regression/benchmark condition was not met; 2 means usage or tool failure.
 
-## Output (`runs/<run-id>/`)
+## Current benchmark evidence
 
-```text
-manifest.json      run metadata
-commands.jsonl     full command log (secrets masked)
-gates.jsonl        deterministic gate results
-findings.jsonl     finding ledger (suspected -> ... -> verified)
-baseline/          sha256 hash baseline and drift detection
-logs/              stdout/stderr per command
-ai/                AI role outputs (JSON + raw)
-verifier/          independent verifier records
-patches/           fix diffs (repair mode)
-final-report.md    final report
-summary.json       machine-readable summary
-workspace/         isolated sandbox copy (repair mode)
-```
+Measurements are never mixed across fixture populations or AI modes.
 
-## Fixture benchmark
+| Measurement | Population | Result | Context |
+|---|---:|---:|---|
+| Deterministic finding benchmark, 2026-09-21 | 9 fixtures / 18 expected findings | 9/18, macro recall 50.0%, false positives 0 | Current baseline |
+| fixture-i AI finding benchmark, 2026-09-21 | 1 fixture / 1 expected finding | recall 100%, precision 100%, false positives 0 | opencode/mimo-v2.5-free |
+| fixture-i false-verification probe, 2026-09-21 | naive + correct repair candidates | FVR = n/a (0 verified); Repair Success = 0% | same model; naive was blocked by adversarial High finding, correct was fail-closed after adversarial output parse failure |
+| Historical AI finding benchmark, 2026-08-23 | 8 fixtures / 17 expected findings | 17/17, true false positives 0 | mimo-v2.5-free; fixture-i did not yet belong to this population |
+| Historical deterministic benchmark, 2026-08-22 | 8 fixtures / 17 expected findings | macro recall 52.9%, false positives 0 | Historical only; do not compare as the current nine-fixture value |
 
-```powershell
-node src/cli.ts eval            # deterministic mode
-node src/cli.ts eval --ai       # with AI layer
-```
+The deterministic 50.0% value is a transparent capability measurement, not a target to celebrate. Its main current strength is zero measured false positives on this fixture set; AI is intended to raise recall while the verification layers protect precision.
 
-Measures detection recall / false positives against 9 intentionally bug-injected fixtures (A-I). Details: `docs/EVALUATION.md`.
+False Verification Rate is treated as a more important repair KPI than raw finding recall. The reproducible fixture-i candidate/oracle harness distinguishes a naive fix that passes ordinary tests but violates a hidden contract from a correct fix. Model-specific verifier/adversarial results must be reported with the model and date.
 
-## Safety
+The current model-specific fixture-i probe is deliberately not reported as FVR=0: neither candidate reached final verified, so the FVR denominator is zero. The naive incorrect candidate was initially accepted by the independent verifier but then stopped by an adversarial High regression finding. The correct candidate passed the oracle and verifier, but malformed adversarial structured output caused the run to fail closed at fixed_unverified. This is evidence that the safety chain can reject an incorrect fix, while also exposing a current availability/Repair Success weakness.
 
-- No write-back to the original project (even patch application is manual)
-- Forbidden: git push / npm publish / production operations / secret output
-- Explorer/Reviewer/Judge/Verifier are read-only. Only Implementer/Test Designer write, and only inside the sandbox
-- Details: `docs/SAFETY.md`
+Full methodology: docs/EVALUATION.md.
 
-## Documentation
+## Real-project evidence
 
-- `docs/ARCHITECTURE.md` - agent layout, trust boundary, data flow
-- `docs/SAFETY.md` - prohibitions and permissions
-- `docs/TARGET_ADAPTER.md` - how to add a new target project
-- `docs/EVALUATION.md` - fixture benchmark and evaluation method
+A real audit produced two different classes of result:
+
+- an AI reviewer proposed a plausible race-condition finding, but the evidence was insufficient and the finding was rejected;
+- during that same audit window, the original target tree changed externally, and the before/after SHA-256 baseline confirmed that drift.
+
+This is the intended distinction: an AI claim does not become fact because it sounds plausible, while directly measured tree drift can be confirmed independently. The public-safe account contains no private source or identifying local path: docs/CASE-STUDY.md.
+
+## Output
+
+Runs create evidence under runs/run-id, including:
+
+- manifest.json — run metadata;
+- commands.jsonl — executed command log with redaction;
+- gates.jsonl — deterministic gate outcomes;
+- findings.jsonl — finding/status ledger;
+- baseline — SHA-256 baseline and drift evidence;
+- logs — command stdout/stderr;
+- ai — structured/raw AI-role artifacts when AI is enabled;
+- verifier — repair verification records;
+- patches — sandbox diffs;
+- final-report.md and summary.json;
+- workspace — isolated working copy when applicable.
+
+## Known limitations
+
+- Fast sandbox mode junction-shares node_modules. Optional strict mode physically copies the dependency tree, avoiding shared node_modules writes at the cost of disk/copy time; neither mode is an OS-level security sandbox.
+- Mutation testing primarily covers JS/TS comparison and logical operators; constant, return-value, statement-removal, and broader language mutations remain future work.
+- AI quality and availability vary by model/provider. Historical AI benchmark results are not model-independent guarantees.
+- verified is bounded by the evidence available to that run and is not a correctness proof.
+- Local validation in this repository is currently Windows. CI is defined for Windows and Linux, but Linux results do not exist until that workflow actually runs on GitHub.
+- Large real-project repair has less empirical coverage than audit; repair should continue to be reviewed through generated evidence and patches.
+
+## CI and contributing
+
+The CI definition uses Node 24 on Windows and Linux and requires no AI secret. It runs typecheck, unit tests, deterministic benchmark regression checks, repository secret scan, and real package/install smoke.
+
+See CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, docs/TROUBLESHOOTING.md, and docs/RELEASING.md.
+
+## Architecture and safety documentation
+
+- docs/ARCHITECTURE.md — data flow, roles, trust boundary
+- docs/SAFETY.md — prohibited operations and isolation model
+- docs/TARGET_ADAPTER.md — adapting a new target/config
+- docs/EVALUATION.md — benchmark populations, metrics, historical results
+- docs/CASE-STUDY.md — sanitized real-project evidence case
+- docs/TROUBLESHOOTING.md — installation/run failure diagnosis
 
 ## License
 

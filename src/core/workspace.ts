@@ -1,10 +1,10 @@
-import { existsSync, symlinkSync } from "node:fs";
+import { cpSync, existsSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { createSandbox } from "./sandbox.ts";
 
 export interface GateWorkspace {
   root: string;
-  mode: "sandbox-junction" | "inplace";
+  mode: "sandbox-junction" | "sandbox-copy" | "inplace";
   filesCopied: number;
   notes: string[];
 }
@@ -19,7 +19,7 @@ export async function prepareGateWorkspace(opts: {
   targetRoot: string;
   destRoot: string;
   excludeGlobs: readonly string[];
-  mode: "junction" | "inplace";
+  mode: "junction" | "copy" | "inplace";
 }): Promise<GateWorkspace> {
   if (opts.mode === "inplace") {
     return {
@@ -34,6 +34,15 @@ export async function prepareGateWorkspace(opts: {
     workspaceRoot: opts.destRoot,
     excludeGlobs: opts.excludeGlobs,
   });
+  if (opts.mode === "copy") {
+    const copied = copyNodeModules(opts.targetRoot, opts.destRoot);
+    return {
+      root: opts.destRoot,
+      mode: "sandbox-copy",
+      filesCopied: sandbox.filesCopied,
+      notes: [copied ? "node_modules physically copied into sandbox" : "node_modules missing; nothing copied"],
+    };
+  }
   const linked = linkNodeModules(opts.targetRoot, opts.destRoot);
   return {
     root: opts.destRoot,
@@ -41,6 +50,14 @@ export async function prepareGateWorkspace(opts: {
     filesCopied: sandbox.filesCopied,
     notes: [linked ? "node_modules junction-linked to target" : "node_modules not linked (missing or exists)"],
   };
+}
+
+function copyNodeModules(targetRoot: string, sandboxRoot: string): boolean {
+  const src = join(targetRoot, "node_modules");
+  const dst = join(sandboxRoot, "node_modules");
+  if (!existsSync(src) || existsSync(dst)) return false;
+  cpSync(src, dst, { recursive: true, dereference: true });
+  return true;
 }
 
 function linkNodeModules(targetRoot: string, sandboxRoot: string): boolean {

@@ -12,6 +12,7 @@ export interface ConfigOverrides {
   reviewTimeoutSec?: number;
   maxMutants?: number;
   mutationEnabled?: boolean;
+  sandboxNodeModulesMode?: "junction" | "copy";
 }
 
 const CONFIG_FILE_NAMES = ["qa.config.json", "agentic-qa.config.json"];
@@ -30,7 +31,7 @@ export const CONFIG_EXAMPLE = `{
     { "name": "pagination-no-dup-or-loss", "cmd": "node scripts/invariants/pagination.js" }
   ],
   "forbidden_paths": [".env", "*.db"],
-  "sandbox": { "exclude_globs": [] },
+  "sandbox": { "exclude_globs": [], "node_modules_mode": "junction" },
   "environment": {},
   "secrets_env": ["EXAMPLE_API_KEY"],
   "ai": {
@@ -101,6 +102,10 @@ export function resolveConfig(targetRootInput: string, overrides: ConfigOverride
         ...detectedCfg.sandbox.exclude_globs,
         ...(stringArray(objGet(fileCfg, "sandbox", "exclude_globs")) ?? []),
       ],
+      node_modules_mode:
+        overrides.sandboxNodeModulesMode ??
+        sandboxNodeModulesMode(objGet(fileCfg, "sandbox", "node_modules_mode")) ??
+        detectedCfg.sandbox.node_modules_mode,
     },
     environment: {
       ...detectedCfg.environment,
@@ -214,6 +219,12 @@ function stringArray(v: unknown): string[] | undefined {
   if (!Array.isArray(v) || v.some((x) => typeof x !== "string"))
     throw new Error("expected array of strings");
   return v as string[];
+}
+
+function sandboxNodeModulesMode(v: unknown): "junction" | "copy" | undefined {
+  if (v === undefined) return undefined;
+  if (v === "junction" || v === "copy") return v;
+  throw new Error("sandbox.node_modules_mode must be junction or copy");
 }
 
 function invariantArray(v: unknown): InvariantConfig[] {

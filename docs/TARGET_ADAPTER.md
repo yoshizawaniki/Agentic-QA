@@ -37,7 +37,10 @@ auto-detectionが行うこと:
     { "name": "pagination-no-dup-or-loss", "cmd": "node scripts/invariants/pagination.js", "category": "data-integrity" }
   ],
   "forbidden_paths": [".env", "*.db"],              // sandbox copyから除外
-  "sandbox": { "exclude_globs": ["big-data/**"] },  // default除外に追加
+  "sandbox": {
+    "exclude_globs": ["big-data/**"],               // default除外に追加
+    "node_modules_mode": "junction"                 // junction=fast(default), copy=stricter isolation
+  },
   "environment": {},                                 // gateコマンドへ渡すenv(実値secret禁止)
   "secrets_env": ["EXAMPLE_API_KEY"],                   // このenv名の値をログからマスク
   "ai": {
@@ -83,6 +86,16 @@ auto-detectionが行うこと:
 ```
 
 mutation testerの変異エンジンはJS/TS向け(.js/.mjs/.ts)。他言語は無効化するか将来adapter拡張で対応。
+
+## node_modules isolation
+
+既定のjunction modeは速いが、targetのnode_modulesを共有する。対象test/toolがnode_modules内部cacheへ書く可能性がある場合は次のいずれかを使う:
+
+```powershell
+node src/cli.ts audit D:\path\to\project --no-ai --strict-isolation
+```
+
+またはqa.config.jsonで `"sandbox": { "node_modules_mode": "copy" }` を指定する。copy modeはnode_modulesを物理copyするためdisk/time costが増えるが、network installは行わない。
 
 ## 大きなリポジトリのコツ
 

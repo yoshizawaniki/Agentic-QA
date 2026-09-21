@@ -1,19 +1,57 @@
 {
   "name": "agentic-qa",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Repository-agnostic, model-swappable autonomous QA orchestration platform: AI finds issues, deterministic evidence decides.",
   "type": "module",
   "engines": {
     "node": ">=23.6"
   },
   "bin": {
-    "agentic-qa": "./src/cli.ts"
+    "agentic-qa": "./dist/cli.js"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "node --test \"tests/*.test.ts\"",
-    "eval": "node src/eval/evaluate.ts"
+    "eval": "node src/cli.ts eval",
+    "eval:deterministic": "node scripts/check-deterministic-eval.mjs",
+    "eval:false-verification": "node src/cli.ts eval-fvr",
+    "package:smoke": "node scripts/package-smoke.mjs",
+    "secret-scan": "node scripts/secret-scan.mjs"
   },
+  "files": [
+    "dist/",
+    ".opencode/agent/",
+    "fixtures/",
+    "docs/",
+    "README.md",
+    "LICENSE",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
+    "qa.config.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yoshizawaniki/Agentic-QA.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yoshizawaniki/Agentic-QA/issues"
+  },
+  "homepage": "https://github.com/yoshizawaniki/Agentic-QA#readme",
+  "keywords": [
+    "agentic-ai",
+    "quality-assurance",
+    "software-testing",
+    "verification",
+    "mutation-testing",
+    "ai-agents",
+    "code-review",
+    "typescript",
+    "cli"
+  ],
   "devDependencies": {
     "@types/node": "^24.13.3",
     "opencode-ai": "^1.18.21",

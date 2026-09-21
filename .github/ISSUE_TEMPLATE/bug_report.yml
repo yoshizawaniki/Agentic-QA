@@ -1,0 +1,58 @@
+name: Bug report
+description: Report a reproducible Agentic-QA defect
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Agentic-QA. Remove secrets, private source code, local usernames, and sensitive paths before posting.
+  - type: input
+    id: version
+    attributes:
+      label: Agentic-QA version / commit
+      placeholder: "0.1.0 or commit SHA"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Windows 11 / Node 24 / npm 11"
+    validations:
+      required: true
+  - type: dropdown
+    id: command
+    attributes:
+      label: Command
+      options: [audit, repair, campaign, verify, eval, package/install, other]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Include the smallest public-safe fixture/config/command that reproduces the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and deterministic evidence
+      description: Prefer exit codes, tests, sanitized diffs, or evidence artifacts over an AI-only conclusion.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed secrets, private code, and identifying local paths.
+          required: true
+

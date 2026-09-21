@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 
 export interface AiRunRequest {
   cwd: string;
@@ -33,6 +33,16 @@ function findOpencodeBinary(): string | null {
     join(pkgRoot, "node_modules", "opencode-ai", "bin", "opencode"),
   ]) {
     if (existsSync(candidate)) return candidate;
+  }
+  const pathEntries = (process.env["PATH"] ?? "").split(delimiter).filter(Boolean);
+  const names = process.platform === "win32"
+    ? ["opencode.exe", "opencode.cmd", "opencode.bat"]
+    : ["opencode"];
+  for (const dir of pathEntries) {
+    for (const name of names) {
+      const candidate = join(dir, name);
+      if (existsSync(candidate)) return candidate;
+    }
   }
   return null;
 }

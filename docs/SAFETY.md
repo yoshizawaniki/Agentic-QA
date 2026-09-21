@@ -28,7 +28,9 @@
 
 1. audit開始時に対象をexclude付きコピー(node_modules/.git/.env*/_trash等を除く)し、sandboxにローカルgitスナップショットを作成
 2. gates・mutation・AI作業はすべてsandbox内で実行
-3. node_modulesはjunction linkで共有(再install不要)。**注意**: node_modules内部キャッシュへの書き込みは元ツリーに影響しうる(ドキュメント済みトレードオフ)。完全分離が必要なら `--no-mutation` + 対象configで`inplace`回避ではなく手動copy+installを使う
+3. node_modulesは既定のfast modeではjunction linkで共有(再install不要)。**注意**: node_modules内部cacheへの書き込みは元ツリー側の依存treeに影響しうる。より強い隔離が必要なら `--strict-isolation` または `sandbox.node_modules_mode: "copy"` を使い、依存treeをsandboxへ物理copyする
+   - strict modeはnetwork/install不要だが、大規模node_modulesではdisk使用量とcopy時間が増える
+   - copy時はsymlinkをdereferenceする。通常npm treeでは元依存treeへの書込共有を避けられるが、OS/containerレベルのsecurity sandboxではない
 4. 実行前後でsha256 baselineを比較し、driftがあればfindingとして報告
 5. 元への反映は`patches/all-fixes.patch`をユーザーが目視確認して自分で適用する(Agentic-QAに適用コマンドは存在しない)
 
