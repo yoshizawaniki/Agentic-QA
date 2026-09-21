@@ -9,7 +9,7 @@ This candidate focuses on making the project installable, independently verifiab
 - npm packages now execute ordinary built JavaScript instead of TypeScript under node_modules.
 - package smoke packs a real tarball, installs it in a clean directory, checks the installed CLI help path, and audits a fixture.
 - package contents use an allowlist so local runs, tests, source-only development files, and local artifacts are not shipped accidentally.
-- Windows/Linux CI covers typecheck, unit tests, the deterministic fixture baseline, secret scan, and package smoke without AI credentials.
+- Windows/Linux CI covers typecheck, unit tests, the deterministic fixture baseline, secret scan, and package smoke without AI credentials; the release-candidate workflow passed on both hosted OSes on 2026-09-21.
 - contributor/security/release/troubleshooting and public-safe case-study documentation were added.
 - repair-mode OpenCode role definitions are present as package assets instead of existing only in historical run sandboxes.
 - fixture-i has a reproducible false-verification candidate/oracle harness; model-specific measurements remain explicitly separated by model/date.
@@ -30,3 +30,5 @@ verified still does **not** mean correctness proven. It means the verification s
 The current fixture-i run also shows the fail-closed tradeoff: malformed verifier/adversarial output can reject a correct repair. This protects against false verification but can reduce successful verification throughput.
 
 The default sandbox still favors speed by junction-sharing node_modules. Strict copy mode removes that shared-write path but costs disk space/copy time and is not an operating-system security sandbox.
+
+The first hosted Linux CI attempt exposed a POSIX process-tree timeout bug and two Windows-centric test assumptions. The timeout implementation and tests were corrected, and the subsequent Windows/Ubuntu matrix run passed in full.

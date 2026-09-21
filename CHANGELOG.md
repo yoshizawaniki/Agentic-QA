@@ -27,6 +27,8 @@ Notable user-visible changes are recorded here. Agentic-QA intends to follow Sem
 
 - npm-installed CLI no longer points at TypeScript under node_modules.
 - Emitted dist/cli.js is recognized as a direct CLI entry point.
+- POSIX timeout handling now terminates the spawned process group instead of leaving descendants alive until their natural exit.
+- Cross-platform command-exit tests no longer assume Windows-specific shell semantics.
 
 ## 0.1.0 - 2026-09-19
 

@@ -27,7 +27,7 @@ Agentic-QAは「AI coding agentが生成・変更した成果物を、独立し�
 | ランタイム依存 | **ゼロ**(devDependenciesのみ: typescript, opencode-ai, @types/node) |
 | AI呼び出し | OpenCode CLI(`opencode run --agent <role>` 非対話モード)。環境変数/ローカルinstall/PATHから探索 |
 | テスト | node:test 組み込み(52 tests / 外部フレームワーク禁止、2026-09-21時点) |
-| 対象OS | Windows実測。Windows/Linux CI定義あり。Linux CIの実走結果は未pushのため未確認 |
+| 対象OS | Windowsローカル実測 + GitHub-hosted windows-latest / ubuntu-latest CI実測済み（2026-09-21、Node 24） |
 | npm配布 | binは dist/cli.js。prepack build + clean-directory tarball install smokeを実測 |
 
 ## 3. 3層QAモデル
@@ -207,7 +207,7 @@ R7-R9で新規ゼロ → 停止。
 5. **同一モデル相関誤差**: context separationはprompt/processレベル。役割別provider分散の有効性は未実証
 6. **False Verification / Repair Successのmodel依存性**: fixture-iのoracle基盤は再現可能だが、verifier/adversarial結果は使用modelごとに測定・分離する必要がある。2026-09-21のmimo-v2.5-free実測では誤修正rejectには成功した一方、正修正もmalformed adversarial outputでverifiedへ到達しなかった
 7. **self-improvement**: 意図的に未実装。固定goldenを先に守る
-8. **Linux実測**: cross-platform package smoke/CIは実装済みだが、この未push worktreeではGitHub-hosted Linux CIをまだ実走していない
+8. **Hosted OS drift**: Windows/Ubuntu CIは2026-09-21に実走PASS済み。ただしhosted runner image更新に伴う将来の差異は継続監視が必要
 
 ## 11. レビュアーへの評価依頼事項
 

@@ -136,12 +136,12 @@ Runs create evidence under runs/run-id, including:
 - Mutation testing primarily covers JS/TS comparison and logical operators; constant, return-value, statement-removal, and broader language mutations remain future work.
 - AI quality and availability vary by model/provider. Historical AI benchmark results are not model-independent guarantees.
 - verified is bounded by the evidence available to that run and is not a correctness proof.
-- Local validation in this repository is currently Windows. CI is defined for Windows and Linux, but Linux results do not exist until that workflow actually runs on GitHub.
+- Local validation was performed on Windows, and GitHub-hosted CI also passed on both windows-latest and ubuntu-latest on 2026-09-21.
 - Large real-project repair has less empirical coverage than audit; repair should continue to be reviewed through generated evidence and patches.
 
 ## CI and contributing
 
-The CI definition uses Node 24 on Windows and Linux and requires no AI secret. It runs typecheck, unit tests, deterministic benchmark regression checks, repository secret scan, and real package/install smoke.
+The CI definition uses Node 24 on Windows and Linux and requires no AI secret. It runs typecheck, unit tests, deterministic benchmark regression checks, repository secret scan, and real package/install smoke. The 2026-09-21 release-candidate CI completed successfully on both hosted operating systems.
 
 See CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, docs/TROUBLESHOOTING.md, and docs/RELEASING.md.
 
