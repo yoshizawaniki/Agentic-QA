@@ -1,5 +1,6 @@
-﻿import { writeFileSync, existsSync, readFileSync } from "node:fs";
+import { writeFileSync, existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { resolveConfig } from "../config/load.ts";
 import type { ConfigOverrides } from "../config/load.ts";
 import { createRedactor } from "../util/redact.ts";
@@ -75,7 +76,7 @@ export async function runAudit(targetRootInput: string, overrides: ConfigOverrid
     targetRoot,
     destRoot: ctx.path("workspace"),
     excludeGlobs: [...config.sandbox.exclude_globs, ...config.forbidden_paths],
-    mode: "junction",
+    mode: config.sandbox.node_modules_mode,
   });
   console.log(`[sandbox] mode=${ws.mode} files=${ws.filesCopied === -1 ? "?" : ws.filesCopied} (${ws.notes.join("; ")})`);
 
@@ -369,7 +370,8 @@ let cachedVersion: string | undefined;
 export function version(): string {
   if (cachedVersion) return cachedVersion;
   try {
-    const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as { version?: string };
+    const packageJson = fileURLToPath(new URL("../../package.json", import.meta.url));
+    const pkg = JSON.parse(readFileSync(packageJson, "utf8")) as { version?: string };
     cachedVersion = pkg.version ?? "0.0.0";
   } catch {
     cachedVersion = "0.0.0";

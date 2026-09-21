@@ -60,7 +60,9 @@ Agentic-QAは「AIの主張をAIの多数決で検証する」のではない。
 original target ──(read-only: hash baseline / 静的走査)──▶ Agentic-QA
        │
        └─ copy(exclude node_modules/.git/.env*) ──▶ runs/<id>/workspace/
-                (node_modulesはjunction linkで共有・再install不要)
+                node_modules:
+                fast(default) = junction share
+                strict        = physical copy (--strict-isolation)
                      │
               gates / mutation / AI work はすべてここで実行
 ```
@@ -68,6 +70,7 @@ original target ──(read-only: hash baseline / 静的走査)──▶ Agentic
 - 元ツリーへの書き込み経路は**実装上存在しない**(patch適用はユーザー手動)
 - 実行前後でsha256 baseline比較し、外部要因によるdriftを検出・報告
 - sandbox内にはローカルgitリポジトリを作りdiff生成。元repoの`.git`は触らない
+- strict isolationはdependency treeを物理copyしてnode_modules cache書込の共有を避ける。代償はdisk/copy costであり、OSレベルsandboxを意味しない
 
 ## Context Separation
 

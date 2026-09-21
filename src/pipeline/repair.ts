@@ -1,4 +1,4 @@
-﻿import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, renameSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -34,7 +34,7 @@ import {
 import { generateReport } from "./report.ts";
 import { SEVERITY_ORDER } from "../types.ts";
 import type { Finding } from "../types.ts";
-import { resolveTargetRoot, defaultRunsRoot } from "./audit.ts";
+import { resolveTargetRoot, defaultRunsRoot, version } from "./audit.ts";
 
 export interface RepairOptions extends ConfigOverrides {
   fromRun?: string;
@@ -81,7 +81,7 @@ async function prepareSandbox(ctx: RunContext, targetRoot: string, config: Targe
     targetRoot,
     destRoot,
     excludeGlobs: [...config.sandbox.exclude_globs, ...config.forbidden_paths],
-    mode: "junction",
+    mode: config.sandbox.node_modules_mode,
   });
   copyQaAgentsIntoSandbox(destRoot);
   return destRoot;
@@ -103,7 +103,7 @@ export async function runRepair(
     kind: "repair",
     target_root: ctx.redact(targetRoot),
     started_at: new Date().toISOString(),
-    agentic_qa_version: "0.1.0",
+    agentic_qa_version: version(),
     ai_enabled: config.ai.enabled,
     detected,
     from_run: opts.fromRun ?? null,
@@ -114,7 +114,7 @@ export async function runRepair(
   ctx.writeArtifact("baseline/baseline.json", JSON.stringify(baseline, null, 2));
 
   const wsRoot = await prepareSandbox(ctx, targetRoot, config, "workspace");
-  console.log("[sandbox] prepared (node_modules junction-linked)");
+  console.log("[sandbox] prepared (node_modules mode=" + config.sandbox.node_modules_mode + ")");
 
   console.log("[gates] baseline...");
   const baseGates = await runGates({ config, cwd: wsRoot, ctx, phase: "baseline" });

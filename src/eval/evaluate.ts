@@ -132,7 +132,7 @@ export async function runEvaluation(opts: {
   }
   if (goldens.length === 0) throw new Error(`no golden files in ${join(FIXTURES_DIR, "expected")}`);
   const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
-  const runsRoot = join(projectRoot(), "runs", `eval-${stamp}-${opts.aiEnabled ? "ai" : "det"}`);
+  const runsRoot = join(process.cwd(), "runs", `eval-${stamp}-${opts.aiEnabled ? "ai" : "det"}`);
   mkdirSync(runsRoot, { recursive: true });
 
   const scores: FixtureScore[] = [];
@@ -195,7 +195,7 @@ export async function rescoreLatestAiRuns(): Promise<EvalSummary> {
   const goldens = loadGoldens();
   const goldenByName = new Map(goldens.map((g) => [g.fixture, g]));
   const latestByFixture = new Map<string, { dir: string; runName: string }>();
-  const runsRoot = join(projectRoot(), "runs");
+  const runsRoot = join(process.cwd(), "runs");
   for (const evalRoot of readdirSync(runsRoot, { withFileTypes: true })) {
     if (!evalRoot.isDirectory() || !evalRoot.name.startsWith("eval-") || !evalRoot.name.endsWith("-ai")) continue;
     for (const run of readdirSync(join(runsRoot, evalRoot.name), { withFileTypes: true })) {

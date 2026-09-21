@@ -1,7 +1,7 @@
 # Agentic-QA 仕様書(外部評価用)
 
 > この文書は単体で自己完結する。別AIによる設計・実装評価のために、現行仕様・実測値・既知の限界をまとめた。
-> (作成時点: 2026-08-23 / version 0.1.0)
+> (最終事実確認: 2026-09-21 / repository version 0.1.0 / next release candidate 0.2.0)
 
 ---
 
@@ -22,12 +22,13 @@ Agentic-QAは「AI coding agentが生成・変更した成果物を、独立し�
 
 | 項目 | 内容 |
 |---|---|
-| 実行環境 | Node.js >= 23.6(型stripで .ts を直接実行、ビルド不要) |
-| 言語 | TypeScript(erasable syntax only / enum・namespace禁止) |
+| 実行環境 | Node.js >= 23.6。repo開発時は型stripで .ts を直接実行、npm配布物はbuild済み dist/*.js |
+| 言語 | TypeScript(erasable syntax only / enum・namespace禁止)。prepackで通常JavaScriptへemit |
 | ランタイム依存 | **ゼロ**(devDependenciesのみ: typescript, opencode-ai, @types/node) |
-| AI呼び出し | OpenCode CLI(`opencode run --agent <role>` 非対話モード)。プロジェクトローカルインストール |
-| テスト | node:test 組み込み(48 tests / 外部フレームワーク禁止) |
-| 対象OS | Windows実測(cmd.exeクォート問題を修正済み)/ POSIX相当コードあり |
+| AI呼び出し | OpenCode CLI(`opencode run --agent <role>` 非対話モード)。環境変数/ローカルinstall/PATHから探索 |
+| テスト | node:test 組み込み(52 tests / 外部フレームワーク禁止、2026-09-21時点) |
+| 対象OS | Windowsローカル実測 + GitHub-hosted windows-latest / ubuntu-latest CI実測済み（2026-09-21、Node 24） |
+| npm配布 | binは dist/cli.js。prepack build + clean-directory tarball install smokeを実測 |
 
 ## 3. 3層QAモデル
 
@@ -81,7 +82,9 @@ agentic-qa campaign <target>    複数round自律検証(停止条件はevidence-
 agentic-qa verify <runId>       保存済みsandboxでゲート再実行+verifier再判定
                                 regression検出時は verified→fixed_unverified 自動降格
 agentic-qa init-config <target> qa.config.jsonテンプレート生成
-agentic-qa eval [--ai]          fixture A-H ベンチマーク(recall/FP測定)
+agentic-qa eval [--ai]          fixture A-I findingベンチマーク(recall/FP測定)
+agentic-qa eval-fvr --no-ai     fixture-i candidate/oracle構造probe
+agentic-qa eval-fvr --model ID  model別False Verification benchmark
 
 共通: --no-ai --model <prov/id> --review-timeout <sec> --max-mutants --no-mutation
       --from-run --max-fixes --competing --rounds --runs-dir
@@ -158,7 +161,7 @@ original target ── read-only(hash baseline / 静的走査)
 
 ## 9. 実測結果
 
-### fixture benchmark(8個の埋め込みbugプロジェクト+golden期待値)
+### 現行fixture benchmark(9個の埋め込みbugプロジェクト+golden期待値)
 
 | fixture | 埋め込み問題 | 決定論的検出経路 |
 |---|---|---|
@@ -170,12 +173,15 @@ original target ── read-only(hash baseline / 静的走査)
 | F | Feb=29固定(leap境界無視) | invariant(month table) |
 | G | formatDateがoffset引数無視(regression trap併設) | invariant(offset boundary) |
 | H | suiteが実際FAILなのにREADME「All tests passing」 | gate失敗+doc-integrity |
+| I | case-insensitive dedup契約 + false-verification trap | 現行deterministic detectorでは未検出。candidate/oracle probe対象 |
 
-- **deterministic mode: macro recall 52.9% / FP = 0**(未検出分はAI推論が必要なクラス)
-- AI mode(部分実施): fixture-eでspec-mismatch@src/ranking.js(critical)+tie-break欠落(logic)を検出、
-  fixture-bで3/3全検出。fixture-aではtest gap特定止まり(model能力差がそのまま出る)
+- **現行 deterministic mode (2026-09-21, A-I): 9/18、macro recall 50.0% / FP = 0**
+- **過去 deterministic mode (2026-08-22, A-H): macro recall 52.9% / FP = 0**。populationが異なるため現行値と混同禁止
+- **過去 AI mode (2026-08-23, A-H, opencode/mimo-v2.5-free): 17/17 / true FP = 0**。fixture-iは含まない
 - AI-backed repair E2E実績(fixture-a, zen free model): invariant違反→fail-first test→修正前FAIL確認→
   修正→regression PASS→verifier verified→adversarial retest→**status=verified**。元fixtureは無変更
+- fixture-iは2026-09-21にdeterministic candidate/oracle probeを実装・実測。naive candidateは通常test PASSだがoracle FAIL、correct candidateはtest/oracleともPASS
+- 同日 opencode/mimo-v2.5-free でfixture-i AI実測: Finding Recall 100%(1/1)、Precision 100%、FP 0。naive誤修正はverifier=verifiedだったがadversarialがHigh regressionを検出し fixed_unverified。correct修正はoracle/verifier PASSだがadversarial JSON parse failureで fixed_unverified。verified母数0のためFVRはnull、Repair Success 0%
 
 ### 反復検証ラウンド(停止条件: 新規再現可能問題3連続ゼロ)
 
@@ -194,14 +200,14 @@ R7-R9で新規ゼロ → 停止。
 
 ## 10. 既知の限界・未検証(正直な開示)
 
-1. **AI eval残り**: fixture-c〜hのAI層測定は無料モデルquota(Zen無応答ハング/OpenRouter日次制限)により未完。ゴールデン較正判断(例: fixture-aで「test gap特定」をgoldenに含めるか)も測定完了後に系統実施予定
-2. **AI repairの大規模実証**: 小fixtureでのみ実証。実プロジェクトへのrepair適用はユーザー承認事項として未実施
-3. **node_modules junctionの共有書き込み**: sandbox内テストがnode_modules内部キャッシュへ書くと物理的には元ツリーのnode_modulesに影響しうる(documented tradeoff)。完全分離が必要ならcopy+installモードが要実装
-4. **mutation engine範囲**: JS/TSの演算子変異のみ。定数変異・文削除・戻り値変異は未実装。他言語未対応
-5. **property-based自動抽出**: invariantは手動宣言のみ。対象コードからの自動提案は未実装
-6. **同一モデル相関誤差**: context separationはprompt/processレベルだが、モデル多様化(役割別provider分散)は未実施
-7. **self-improvement**: 意図的に未実装(固定benchmark holdout先行)
-8. **Windows前提の実測**: POSIX側コードはあるが実測はWindowsのみ
+1. **AI repairの大規模実証**: 小fixtureのE2E実績はあるが、大規模実プロジェクトrepairの母数はまだ小さい
+2. **node_modules isolation tradeoff**: 既定fast modeはjunction共有のためnode_modules内部cache書込が元依存treeへ影響しうる。strict copy modeを実装済みだがdisk/copy costがあり、OSレベルsandboxではない
+3. **mutation engine範囲**: JS/TSの比較・論理演算子変異が中心。定数・文削除・戻り値等は未実装。他言語未対応
+4. **property-based自動抽出**: invariantは手動宣言のみ。対象コードからの自動提案は未実装
+5. **同一モデル相関誤差**: context separationはprompt/processレベル。役割別provider分散の有効性は未実証
+6. **False Verification / Repair Successのmodel依存性**: fixture-iのoracle基盤は再現可能だが、verifier/adversarial結果は使用modelごとに測定・分離する必要がある。2026-09-21のmimo-v2.5-free実測では誤修正rejectには成功した一方、正修正もmalformed adversarial outputでverifiedへ到達しなかった
+7. **self-improvement**: 意図的に未実装。固定goldenを先に守る
+8. **Hosted OS drift**: Windows/Ubuntu CIは2026-09-21に実走PASS済み。ただしhosted runner image更新に伴う将来の差異は継続監視が必要
 
 ## 11. レビュアーへの評価依頼事項
 

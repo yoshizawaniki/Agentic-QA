@@ -36,6 +36,7 @@ test("config file overrides and extends detection", () => {
       gates: { test: { cmd: "custom-test-runner", timeout_sec: 42 }, lint: { cmd: "my-lint" } },
       secrets_env: ["MY_TOKEN"],
       ai: { enabled: false },
+      sandbox: { node_modules_mode: "copy" },
     }),
   });
   try {
@@ -45,6 +46,18 @@ test("config file overrides and extends detection", () => {
     assert.equal(config.gates.lint?.cmd, "my-lint");
     assert.deepEqual(config.secrets_env, ["MY_TOKEN"]);
     assert.equal(config.ai.enabled, false);
+    assert.equal(config.sandbox.node_modules_mode, "copy");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("sandbox node_modules mode rejects unknown values", () => {
+  const dir = withFiles({
+    "qa.config.json": JSON.stringify({ sandbox: { node_modules_mode: "magic" } }),
+  });
+  try {
+    assert.throws(() => resolveConfig(dir), /node_modules_mode/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

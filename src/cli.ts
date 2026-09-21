@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { runAudit, resolveTargetRoot, defaultRunsRoot } from "./pipeline/audit.ts";
+import { basename, join } from "node:path";
+import { runAudit, resolveTargetRoot } from "./pipeline/audit.ts";
 import { runRepair } from "./pipeline/repair.ts";
 import type { RepairOptions } from "./pipeline/repair.ts";
 import { runCampaign } from "./pipeline/campaign.ts";
@@ -14,6 +15,8 @@ Usage:
   agentic-qa campaign <target>    multi-round verify+fix until stop conditions
   agentic-qa verify <runId>       re-run executed verification for a stored run
   agentic-qa init-config <target> write a qa.config.json template into target
+  agentic-qa eval-fvr --no-ai     deterministic fixture-i candidate/oracle probe
+  agentic-qa eval-fvr --model <id> model-specific false-verification benchmark
 
 Common options:
   --no-ai                  deterministic layers only (no model calls)
@@ -22,6 +25,7 @@ Common options:
   --implementer-model <id> implementer model
   --max-mutants <n>        mutation testing budget (default 8)
   --no-mutation            skip mutation testing
+  --strict-isolation       physically copy node_modules instead of junction-sharing it
   --from-run <runId>       seed repair findings from a previous audit/repair run
   --max-fixes <n>          max findings to attempt per repair round (default 3)
   --competing <n>          competing fix candidates for the top finding (default 1)
@@ -67,6 +71,7 @@ function overridesFromFlags(flags: Record<string, string | boolean>): RepairOpti
   if (typeof flags["review-timeout"] === "string") o.reviewTimeoutSec = Number(flags["review-timeout"]);
   if (typeof flags["max-mutants"] === "string") o.maxMutants = Number(flags["max-mutants"]);
   if (flags["no-mutation"] === true) o.mutationEnabled = false;
+  if (flags["strict-isolation"] === true) o.sandboxNodeModulesMode = "copy";
   if (typeof flags["from-run"] === "string") o.fromRun = flags["from-run"];
   if (typeof flags["max-fixes"] === "string") o.maxFixes = Number(flags["max-fixes"]);
   if (typeof flags["competing"] === "string") o.competing = Number(flags["competing"]);
@@ -89,7 +94,7 @@ export function auditExitCode(verdict: string): 0 | 1 {
 }
 
 export function resolveRunsRoot(flags: Record<string, string | boolean>, cwdDefault: string): string {
-  return typeof flags["runs-dir"] === "string" ? String(flags["runs-dir"]) : joinPath(cwdDefault, "runs");
+  return typeof flags["runs-dir"] === "string" ? String(flags["runs-dir"]) : join(cwdDefault, "runs");
 }
 
 async function main(): Promise<number> {
@@ -123,7 +128,7 @@ async function main(): Promise<number> {
     case "init-config": {
       const target = requireTarget(args);
       const { CONFIG_EXAMPLE } = await import("./config/load.ts");
-      const dest = joinPath(target, "qa.config.json");
+      const dest = join(target, "qa.config.json");
       const { writeFileSync, existsSync } = await import("node:fs");
       if (existsSync(dest)) {
         console.error(`already exists: ${dest}`);
@@ -157,6 +162,21 @@ async function main(): Promise<number> {
       await mod.rescoreLatestAiRuns();
       return 0;
     }
+    case "eval-fvr": {
+      const mod = await import("./eval/falseVerification.ts");
+      const aiEnabled = args.flags["no-ai"] !== true;
+      const summary = await mod.runFalseVerificationBenchmark({
+        aiEnabled,
+        model: typeof args.flags["model"] === "string" ? String(args.flags["model"]) : undefined,
+        verifierModel:
+          typeof args.flags["verifier-model"] === "string" ? String(args.flags["verifier-model"]) : undefined,
+        reviewTimeoutSec:
+          typeof args.flags["review-timeout"] === "string" ? Number(args.flags["review-timeout"]) : undefined,
+      });
+      if (!aiEnabled) return 0;
+      if (!summary.ai_measured) return 1;
+      return summary.metrics.false_verification_rate === 0 && summary.metrics.repair_success === 1 ? 0 : 1;
+    }
     case "help":
     case undefined:
       console.log(USAGE);
@@ -168,13 +188,16 @@ async function main(): Promise<number> {
   }
 }
 
-function joinPath(a: string, b: string): string {
-  // small helper to avoid importing path in the switch body
-  return a.endsWith("/") || a.endsWith("\\") ? a + b : `${a}\\${b}`.replace(/\\\\/g, "\\");
+export function shouldRunMain(argv1: string | undefined): boolean {
+  if (!argv1) return false;
+  // process.argv[1] is native in real executions, but normalizing both
+  // separators makes the predicate deterministic in cross-platform tests and
+  // wrappers that may pass a path produced by another OS.
+  const name = basename(argv1.replace(/\\/g, "/")).toLowerCase();
+  return name === "cli.ts" || name === "cli.js" || name === "agentic-qa" || name === "agentic-qa.cmd";
 }
 
-const isDirectRun = process.argv[1] !== undefined &&
-  (process.argv[1].endsWith("cli.ts") || process.argv[1].endsWith("agentic-qa"));
+const isDirectRun = shouldRunMain(process.argv[1]);
 if (isDirectRun) {
   main()
     .then((code) => process.exit(code))

@@ -6,6 +6,7 @@
     "test": { "cmd": "npm test", "timeout_sec": 300 }
   },
   "secrets_env": [],
+  "sandbox": { "node_modules_mode": "junction" },
   "mutation": {
     "enabled": true,
     "max_mutants": 8,

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseArgs, repairExitCode, auditExitCode, resolveRunsRoot } from "../src/cli.ts";
+import { parseArgs, repairExitCode, auditExitCode, resolveRunsRoot, shouldRunMain } from "../src/cli.ts";
 
 test("parseArgs: command + positional + flags with values", () => {
   const args = parseArgs(["audit", "some/target", "--no-mutation", "--model", "openrouter/x:free", "--runs-dir", "D:\\tmp\\runs"]);
@@ -33,4 +33,10 @@ test("auditExitCode and resolveRunsRoot", () => {
   assert.equal(resolveRunsRoot({ "runs-dir": "X:\\r" }, "C:\\w"), "X:\\r");
   const fallback = resolveRunsRoot({}, "C:\\w");
   assert.ok(fallback.includes("runs"));
+});
+
+test("packaged dist CLI is recognized as a direct invocation", () => {
+  assert.equal(shouldRunMain("/tmp/node_modules/agentic-qa/dist/cli.js"), true);
+  assert.equal(shouldRunMain("C:\\repo\\src\\cli.ts"), true);
+  assert.equal(shouldRunMain("C:\\repo\\tests\\cli.test.ts"), false);
 });

@@ -5,7 +5,7 @@ import { FindingLedger } from "../core/findings.ts";
 import { RunContext } from "../core/evidence.ts";
 import { runRepair } from "./repair.ts";
 import type { FixOutcome } from "./repair.ts";
-import { resolveTargetRoot, defaultRunsRoot } from "./audit.ts";
+import { resolveTargetRoot, defaultRunsRoot, version } from "./audit.ts";
 
 export interface CampaignOptions extends ConfigOverrides {
   rounds?: number;
@@ -38,7 +38,7 @@ export async function runCampaign(
     kind: "campaign",
     target_root: ctx.redact(targetRoot),
     started_at: new Date().toISOString(),
-    agentic_qa_version: "0.1.0",
+    agentic_qa_version: version(),
     ai_enabled: config.ai.enabled,
     max_rounds: maxRounds,
   });
@@ -97,7 +97,7 @@ export async function runCampaign(
     kind: "campaign",
     target_root: ctx.redact(targetRoot),
     started_at: ctx.path("manifest.json") ? new Date().toISOString() : new Date().toISOString(),
-    agentic_qa_version: "0.1.0",
+    agentic_qa_version: version(),
     rounds_completed: summaries.length,
     rounds: summaries,
   });

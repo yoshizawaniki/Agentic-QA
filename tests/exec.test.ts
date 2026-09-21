@@ -14,7 +14,7 @@ test("exec: captures exit code and output", async () => {
 
 test("exec: nonzero exit captured without throwing", async () => {
   const res = await runCommand({
-    cmd: process.platform === "win32" ? "cmd /c exit 3" : "false",
+    cmd: 'node -e "process.exit(3)"',
     cwd: process.cwd(),
     timeout_sec: 30,
   });

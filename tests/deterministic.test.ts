@@ -22,8 +22,8 @@ test("runGates: passing and failing commands produce correct GateResults", async
     target: { root: dir },
     rules: [],
     gates: {
-      test: { cmd: process.platform === "win32" ? "cmd /c exit 0" : "true", timeout_sec: 30 },
-      lint: { cmd: process.platform === "win32" ? "cmd /c exit 5" : "false", timeout_sec: 30 },
+      test: { cmd: 'node -e "process.exit(0)"', timeout_sec: 30 },
+      lint: { cmd: 'node -e "process.exit(5)"', timeout_sec: 30 },
     },
     invariants: [],
     forbidden_paths: [],

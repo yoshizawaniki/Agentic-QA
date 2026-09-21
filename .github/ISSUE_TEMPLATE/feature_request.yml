@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a measurable improvement
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What failure mode or missing capability should Agentic-QA address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain how it preserves evidence-based verification and original-tree isolation.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      description: Suggest a deterministic test, fixture, benchmark, or package smoke where possible.
+    validations:
+      required: true
+
