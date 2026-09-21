@@ -31,7 +31,14 @@ function killTree(pid: number): void {
     if (process.platform === "win32") {
       spawn("taskkill", ["/PID", String(pid), "/T", "/F"], { stdio: "ignore" });
     } else {
-      spawn("kill", ["-9", "-" + pid], { stdio: "ignore" });
+      // POSIX children are spawned detached below so their PID is also the
+      // process-group ID. Kill the whole group to avoid leaving grandchildren
+      // (for example: sh -> npm -> node) alive after a timeout.
+      try {
+        process.kill(-pid, "SIGKILL");
+      } catch {
+        process.kill(pid, "SIGKILL");
+      }
     }
   } catch {
     // best effort
@@ -58,7 +65,7 @@ export async function runCommand(opts: ExecOptions): Promise<ExecResult> {
         cwd: opts.cwd,
         env: { ...process.env, ...(opts.env ?? {}) },
         stdio: ["ignore", "pipe", "pipe"],
-        windowsHide: true,
+        detached: true,
       });
 
   let stdout = "";

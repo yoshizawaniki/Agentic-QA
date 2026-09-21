@@ -190,7 +190,10 @@ async function main(): Promise<number> {
 
 export function shouldRunMain(argv1: string | undefined): boolean {
   if (!argv1) return false;
-  const name = basename(argv1).toLowerCase();
+  // process.argv[1] is native in real executions, but normalizing both
+  // separators makes the predicate deterministic in cross-platform tests and
+  // wrappers that may pass a path produced by another OS.
+  const name = basename(argv1.replace(/\\/g, "/")).toLowerCase();
   return name === "cli.ts" || name === "cli.js" || name === "agentic-qa" || name === "agentic-qa.cmd";
 }
 
